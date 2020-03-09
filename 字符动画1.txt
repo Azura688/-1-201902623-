@@ -1,0 +1,180 @@
+#include<stdio.h>
+#include<windows.h>
+#include<time.h>
+#include<stdlib.h>
+int main() 
+{  
+	void load(char liuxin[25][80],char ground[5][80],int heng[10],int lie[10]); 
+    void echo(char out[25][80],int lie[10],int color[10]); 
+    void make(char out[25][80],char liuxin[25][80],char mark[10],int lie[10],int heng[10],int color[10],int speed[10],int exist[10]); 
+    void fall(char out[25][80],char liuxin[25][80],int speed[10],char ground[5][80],int exist[10],int heng[10],int lie[10]);  
+	void panduan(char ground[5][80]); 
+    void con(char out[25][80],char liuxin[25][80],char ground[5][80]);  
+	int exist_or(char liuxin[25][80]); 
+    char out[25][80],liuxin[25][80],ground[5][80],mark[10];  
+	int exist[10],lie[10],heng[10],color[10],speed[10];
+	load(liuxin,ground,heng,lie);
+	srand((int)time(0));
+	con(out,liuxin,ground);
+    echo(out,lie,color);
+    while(1)
+	{
+		make(out,liuxin,mark,lie,heng,color,speed,exist);//产生一组10个不同颜色不同字母不同下落速度的流星雨
+		while(1)
+		{
+			con(out,liuxin,ground);
+			echo(out,lie,color);
+			panduan(ground); 
+            Sleep(1); 
+            fall(out,liuxin,speed,ground,exist,heng,lie);
+		    if(exist_or(liuxin)==0)
+			break;
+		}
+	}
+return 0;
+}
+void load(char liuxin[25][80],char ground[5][80],int heng[10],int lie[10]) //初始化流星数组和地面
+{
+	int i1,i2;
+    for(i1=0;i1<25;i1++)
+		for(i2=0;i2<80;i2++)
+			liuxin[i1][i2]=' ';
+    for(i1=0;i1<5;i1++)
+		 for(i2=0;i2<80;i2++)
+			 ground[i1][i2]='#'; 
+	for(i1=0;i1<10;i1++)
+	{
+		heng[i1]=0;
+		lie[i1]=i1;
+	}
+}
+
+void echo(char out[25][80],int lie[10],int color[10]) //将out数组输出到屏幕上 
+{
+	int i1,i2,i3=0;
+	COORD coord;
+	coord.X=0;
+    coord.Y=0;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE),coord);
+	for(i1=0;i1<25;i1++)
+	{
+		i3=0;
+        for(i2=0;i2<80;i2++)
+		{
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_INTENSITY);//设置颜色
+			if(i2==lie[i3])
+			{
+				if(out[i1][i2]!=' '&&out[i1][i2]!='#')
+					switch(color[i3])
+				{
+case 0:
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED);break;//红色
+case 1:
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_GREEN);break;//绿色
+case 2:
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_BLUE);break;//蓝色
+case 3:
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED|FOREGROUND_GREEN|FOREGROUND_BLUE);break;//白色
+case 4:
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED|FOREGROUND_GREEN);break;//黄色
+case 5:
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED|FOREGROUND_BLUE);break;//洋红色
+case 6:
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_GREEN|FOREGROUND_BLUE);break;//蓝绿色
+				}
+    i3+=1;
+			}
+			printf("%c",out[i1][i2]);
+		}
+	}
+}
+void make(char out[25][80],char liuxin[25][80],char mark[10],int lie[10],int heng[10],int color[10],int speed[10],int exist[10])//产生一组10个不同颜色不同字母不同下落速度的流星雨 
+{
+	int i1,i2,t,change,base=1;
+	for(i1=0;i1<10;i1++) 
+	{
+		heng[i1]=0;
+		mark[i1]=(abs(rand())%26+65); //产生随机字母
+		color[i1]=(abs(rand())%7);//产生随机颜色 
+		while(1) 
+		{ 
+			base=0; 
+			t=(abs(rand())%80); //设置随机初始列位置
+			for(i2=0;i2<10;i2++) 
+				if(t==lie[i2]) base=1; 
+				if(base==0) break; 
+		} 
+		lie[i1]=t; 
+		speed[i1]=(abs(rand())%4)+1;//设置随机的速度
+		liuxin[0][lie[i1]]=mark[i1];
+		exist[i1]=1;
+	}
+	for(i1=0;i1<10;i1++)
+		for(i2=0;i2<9;i2++)
+			if(lie[i2]>lie[i2+1])
+			{
+				change=lie[i2];
+				lie[i2]=lie[i2+1];
+				lie[i2+1]=change;
+			}//保证列位置不同
+}
+
+void fall(char out[25][80],char liuxin[25][80],int speed[10],char ground[5][80],int exist[10],int heng[10],int lie[10])//下落过程的实现
+{
+	int i1,i2;
+	for(i1=0;i1<10;i1++) 
+	{ 
+		if(exist[i1]==1) 
+		{
+			for(i2=1;i2<=speed[i1];i2++) 
+			{
+				liuxin[heng[i1]+1][lie[i1]]=liuxin[heng[i1]][lie[i1]];
+				liuxin[heng[i1]][lie[i1]]=' ';
+				heng[i1]+=1;
+				if(heng[i1]>=20)
+				{
+					if(ground[heng[i1]-20][lie[i1]]=='#')
+					{liuxin[heng[i1]][lie[i1]]=' ';
+					ground[heng[i1]-20][lie[i1]]=' ';
+					exist[i1]=0;
+					break;
+					}
+				}
+			}
+		}
+	}
+}
+int exist_or(char liuxin[25][80]) //判断是否还有流星，如果没有就开始新的make函数 
+{ 
+	int i1,i2,t=0; 
+	for(i1=0;i1<25;i1++) 
+		for(i2=0;i2<80;i2++) 
+		{
+			if(liuxin[i1][i2]!=' ')
+			{
+				t=1;
+				break;
+			}
+		}
+return t;
+}
+void panduan(char ground[5][80]) //判断最后一行是否有空格 
+{
+	int i;
+	for(i=0;i<80;i++)
+	{
+		if(ground[4][i]==' ')
+			getchar();
+	}
+}
+void con(char out[25][80],char liuxin[25][80],char ground[5][80]) //将流行数组与地面数组整合到out数组中 
+{
+	int i1,i2;
+	for(i1=0;i1<25;i1++)
+		for(i2=0;i2<80;i2++)
+			out[i1][i2]=liuxin[i1][i2];
+		for(i1=20;i1<25;i1++)
+			for(i2=0;i2<80;i2++)
+				if(ground[i1-20][i2]=='#')
+					out[i1][i2]=ground[i1-20][i2];
+}
